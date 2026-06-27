@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
   Badge,
@@ -24,14 +24,14 @@ import {
   calculateHandicappedScore,
 } from '../lib/scoring';
 import { AddArcherModal } from '../components/AddArcherModal';
-import { ScoreGrid } from '../components/ScoreGrid';
+import { ScoreModal } from '../components/ScoreModal';
 
 export function SessionPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [expandedArcherId, setExpandedArcherId] = useState<string | null>(null);
+  const [scoringArcher, setScoringArcher] = useState<Archer | null>(null);
 
   useEffect(() => {
     if (id) setSession(getSession(id));
@@ -45,7 +45,6 @@ export function SessionPage() {
     setSession(updated);
     updateSession(updated);
     setShowAddModal(false);
-    setExpandedArcherId(archer.id);
   }
 
   function handleDelete() {
@@ -71,6 +70,7 @@ export function SessionPage() {
     };
     setSession(updated);
     updateSession(updated);
+    setScoringArcher(prev => (prev?.id === archerId ? { ...prev, scores } : prev));
   }
 
   if (!session || !round) {
@@ -140,62 +140,39 @@ export function SessionPage() {
                 const golds = calculateGolds(archer.scores, round.goldScore);
                 const allowance = getAllowance(archer.handicap, round.allowances);
                 const hcScore = calculateHandicappedScore(totalScore, allowance);
-                const isExpanded = expandedArcherId === archer.id;
 
                 return (
-                  <Fragment key={archer.id}>
-                    <Table.Row>
-                      <Table.Cell fontWeight="medium">{archer.name}</Table.Cell>
-                      <Table.Cell>
-                        <Badge
-                          colorPalette={archer.bowType === 'Recurve' ? 'blue' : 'green'}
-                        >
-                          {archer.bowType}
-                        </Badge>
-                      </Table.Cell>
-                      <Table.Cell textAlign="right">{totalScore}</Table.Cell>
-                      <Table.Cell textAlign="right">{hits}</Table.Cell>
-                      <Table.Cell textAlign="right">{golds}</Table.Cell>
-                      <Table.Cell textAlign="right">
-                        {archer.handicap !== null ? archer.handicap : '—'}
-                      </Table.Cell>
-                      <Table.Cell textAlign="right">
-                        {archer.handicap !== null ? allowance : '—'}
-                      </Table.Cell>
-                      <Table.Cell textAlign="right" fontWeight="semibold">
-                        {hcScore}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() =>
-                            setExpandedArcherId(isExpanded ? null : archer.id)
-                          }
-                        >
-                          {isExpanded ? 'Hide' : 'Scores'}
-                        </Button>
-                      </Table.Cell>
-                    </Table.Row>
-                    {isExpanded && (
-                      <Table.Row>
-                        <Table.Cell
-                          colSpan={9}
-                          p={4}
-                          bg="gray.50"
-                          _dark={{ bg: 'gray.800' }}
-                        >
-                          <ScoreGrid
-                            round={round}
-                            scores={archer.scores}
-                            onChange={scores =>
-                              handleScoreChange(archer.id, scores)
-                            }
-                          />
-                        </Table.Cell>
-                      </Table.Row>
-                    )}
-                  </Fragment>
+                  <Table.Row key={archer.id}>
+                    <Table.Cell fontWeight="medium">{archer.name}</Table.Cell>
+                    <Table.Cell>
+                      <Badge
+                        colorPalette={archer.bowType === 'Recurve' ? 'blue' : 'green'}
+                      >
+                        {archer.bowType}
+                      </Badge>
+                    </Table.Cell>
+                    <Table.Cell textAlign="right">{totalScore}</Table.Cell>
+                    <Table.Cell textAlign="right">{hits}</Table.Cell>
+                    <Table.Cell textAlign="right">{golds}</Table.Cell>
+                    <Table.Cell textAlign="right">
+                      {archer.handicap !== null ? archer.handicap : '—'}
+                    </Table.Cell>
+                    <Table.Cell textAlign="right">
+                      {archer.handicap !== null ? allowance : '—'}
+                    </Table.Cell>
+                    <Table.Cell textAlign="right" fontWeight="semibold">
+                      {hcScore}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setScoringArcher(archer)}
+                      >
+                        Scores
+                      </Button>
+                    </Table.Cell>
+                  </Table.Row>
                 );
               })}
             </Table.Body>
@@ -208,6 +185,13 @@ export function SessionPage() {
         onClose={() => setShowAddModal(false)}
         onAdd={handleAddArcher}
         round={round}
+      />
+
+      <ScoreModal
+        archer={scoringArcher}
+        round={round}
+        onClose={() => setScoringArcher(null)}
+        onChange={handleScoreChange}
       />
     </Container>
   );

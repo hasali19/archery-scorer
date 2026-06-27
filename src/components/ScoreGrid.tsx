@@ -68,7 +68,7 @@ export function ScoreGrid({ round, scores, onChange }: Props) {
             <Table.ColumnHeader>Dist.</Table.ColumnHeader>
             <Table.ColumnHeader>End</Table.ColumnHeader>
             {Array.from({ length: maxArrowsPerEnd }, (_, i) => (
-              <Table.ColumnHeader key={i} textAlign="center">
+              <Table.ColumnHeader key={i}>
                 A{i + 1}
               </Table.ColumnHeader>
             ))}
