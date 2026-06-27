@@ -1,22 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
-  Badge,
   Box,
   Button,
   Card,
   Container,
+  Field,
   Flex,
   Heading,
   IconButton,
   Input,
+  NativeSelect,
   SimpleGrid,
   Stack,
   Table,
   Text,
 } from '@chakra-ui/react';
-import { Trash2 } from 'lucide-react';
-import type { Archer, Session } from '../types';
+import { Pencil, Trash2 } from 'lucide-react';
+import type { Archer, BowType, Session } from '../types';
 import { getSession, updateSession, deleteSession } from '../lib/storage';
 import { ROUNDS } from '../data/rounds';
 import {
@@ -42,12 +43,22 @@ export function SessionPage() {
 
   const round = session ? ROUNDS[session.roundId] : null;
 
-  function handleAddArcher(archer: Archer) {
+  function updateArchers(archers: Archer[]) {
     if (!session) return;
-    const updated = { ...session, archers: [...session.archers, archer] };
+    const updated = { ...session, archers };
     setSession(updated);
     updateSession(updated);
+  }
+
+  function handleAddArcher(archer: Archer) {
+    if (!session) return;
+    updateArchers([...session.archers, archer]);
     setShowAddModal(false);
+  }
+
+  function handleArcherChange(archerId: string, changes: Partial<Pick<Archer, 'name' | 'bowType' | 'handicap'>>) {
+    if (!session) return;
+    updateArchers(session.archers.map(a => (a.id === archerId ? { ...a, ...changes } : a)));
   }
 
   function handleDelete() {
@@ -65,14 +76,7 @@ export function SessionPage() {
 
   function handleScoreChange(archerId: string, scores: (number | null)[]) {
     if (!session) return;
-    const updated = {
-      ...session,
-      archers: session.archers.map(a =>
-        a.id === archerId ? { ...a, scores } : a,
-      ),
-    };
-    setSession(updated);
-    updateSession(updated);
+    updateArchers(session.archers.map(a => (a.id === archerId ? { ...a, scores } : a)));
     setScoringArcher(prev => (prev?.id === archerId ? { ...prev, scores } : prev));
   }
 
@@ -134,20 +138,60 @@ export function SessionPage() {
               return (
                 <Card.Root key={archer.id} variant="outline">
                   <Card.Body p={4}>
-                    <Flex justify="space-between" align="center" mb={3}>
-                      <Text fontWeight="semibold" fontSize="lg">{archer.name}</Text>
-                      <Badge colorPalette={archer.bowType === 'Recurve' ? 'blue' : 'green'}>
-                        {archer.bowType}
-                      </Badge>
-                    </Flex>
+                    <Stack gap={3} mb={3}>
+                      <Field.Root>
+                        <Field.Label>Name</Field.Label>
+                        <Input
+                          size="sm"
+                          value={archer.name}
+                          onChange={e =>
+                            handleArcherChange(archer.id, { name: e.target.value })
+                          }
+                        />
+                      </Field.Root>
+                      <Flex gap={4}>
+                        <Field.Root flex={1}>
+                          <Field.Label>Bow Type</Field.Label>
+                          <NativeSelect.Root size="sm">
+                            <NativeSelect.Field
+                              value={archer.bowType}
+                              onChange={e =>
+                                handleArcherChange(archer.id, {
+                                  bowType: e.target.value as BowType,
+                                })
+                              }
+                            >
+                              <option value="Recurve">Recurve</option>
+                              <option value="Barebow">Barebow</option>
+                            </NativeSelect.Field>
+                            <NativeSelect.Indicator />
+                          </NativeSelect.Root>
+                        </Field.Root>
+                        <Field.Root w="80px">
+                          <Field.Label>Handicap</Field.Label>
+                          <Input
+                            size="sm"
+                            type="number"
+                            min={0}
+                            max={150}
+                            value={archer.handicap ?? ''}
+                            onChange={e =>
+                              handleArcherChange(archer.id, {
+                                handicap: e.target.value !== '' ? Number(e.target.value) : null,
+                              })
+                            }
+                            placeholder="None"
+                          />
+                        </Field.Root>
+                      </Flex>
+                    </Stack>
                     <SimpleGrid columns={3} gap={3} mb={3}>
                       {[
                         { label: 'Total', value: totalScore },
                         { label: 'Hits', value: hits },
                         { label: 'Golds', value: golds },
-                        { label: 'HC', value: archer.handicap !== null ? archer.handicap : '—' },
-                        { label: 'Allow.', value: archer.handicap !== null ? allowance : '—' },
-                        { label: 'HC Score', value: hcScore },
+                        { label: 'Allowance', value: archer.handicap !== null ? allowance : '—' },
+                        { label: 'Handicap Total', value: hcScore },
                       ].map(({ label, value }) => (
                         <Box key={label}>
                           <Text fontSize="xs" color="gray.500">{label}</Text>
@@ -156,8 +200,8 @@ export function SessionPage() {
                       ))}
                     </SimpleGrid>
                     <Flex justify="flex-end">
-                      <Button size="sm" variant="ghost" onClick={() => setScoringArcher(archer)}>
-                        Edit Scores
+                      <Button size="sm" variant="outline" onClick={() => setScoringArcher(archer)}>
+                        <Pencil /> Scores
                       </Button>
                     </Flex>
                   </Card.Body>
@@ -173,12 +217,12 @@ export function SessionPage() {
                 <Table.Row>
                   <Table.ColumnHeader>Name</Table.ColumnHeader>
                   <Table.ColumnHeader>Type</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="right">Handicap</Table.ColumnHeader>
                   <Table.ColumnHeader textAlign="right">Total</Table.ColumnHeader>
                   <Table.ColumnHeader textAlign="right">Hits</Table.ColumnHeader>
                   <Table.ColumnHeader textAlign="right">Golds</Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="right">HC</Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="right">Allow.</Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="right">HC Score</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="right">Allowance</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="right">Handicap Score</Table.ColumnHeader>
                   <Table.ColumnHeader />
                 </Table.Row>
               </Table.Header>
@@ -192,18 +236,50 @@ export function SessionPage() {
 
                   return (
                     <Table.Row key={archer.id}>
-                      <Table.Cell fontWeight="medium">{archer.name}</Table.Cell>
                       <Table.Cell>
-                        <Badge colorPalette={archer.bowType === 'Recurve' ? 'blue' : 'green'}>
-                          {archer.bowType}
-                        </Badge>
+                        <Input
+                          size="sm"
+                          value={archer.name}
+                          onChange={e =>
+                            handleArcherChange(archer.id, { name: e.target.value })
+                          }
+                        />
                       </Table.Cell>
-                      <Table.Cell textAlign="right">{totalScore}</Table.Cell>
+                      <Table.Cell>
+                        <NativeSelect.Root size="sm">
+                          <NativeSelect.Field
+                            value={archer.bowType}
+                            onChange={e =>
+                              handleArcherChange(archer.id, {
+                                bowType: e.target.value as BowType,
+                              })
+                            }
+                          >
+                            <option value="Recurve">Recurve</option>
+                            <option value="Barebow">Barebow</option>
+                          </NativeSelect.Field>
+                          <NativeSelect.Indicator />
+                        </NativeSelect.Root>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Input
+                          size="sm"
+                          type="number"
+                          min={0}
+                          max={150}
+                          value={archer.handicap ?? ''}
+                          onChange={e =>
+                            handleArcherChange(archer.id, {
+                              handicap: e.target.value !== '' ? Number(e.target.value) : null,
+                            })
+                          }
+                          placeholder="—"
+                          textAlign="right"
+                        />
+                      </Table.Cell>
+                      <Table.Cell textAlign="right" fontWeight="semibold">{totalScore}</Table.Cell>
                       <Table.Cell textAlign="right">{hits}</Table.Cell>
                       <Table.Cell textAlign="right">{golds}</Table.Cell>
-                      <Table.Cell textAlign="right">
-                        {archer.handicap !== null ? archer.handicap : '—'}
-                      </Table.Cell>
                       <Table.Cell textAlign="right">
                         {archer.handicap !== null ? allowance : '—'}
                       </Table.Cell>
@@ -211,8 +287,8 @@ export function SessionPage() {
                         {hcScore}
                       </Table.Cell>
                       <Table.Cell>
-                        <Button size="sm" variant="ghost" onClick={() => setScoringArcher(archer)}>
-                          Edit Scores
+                        <Button size="sm" variant="outline" onClick={() => setScoringArcher(archer)}>
+                          <Pencil /> Scores
                         </Button>
                       </Table.Cell>
                     </Table.Row>
