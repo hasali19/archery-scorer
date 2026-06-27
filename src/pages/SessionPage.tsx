@@ -86,34 +86,34 @@ export function SessionPage() {
 
   return (
     <Container maxW="6xl" py={8}>
-      <Flex justify="space-between" align="flex-start" mb={6}>
+      <Flex justify="space-between" align="flex-start" mb={8}>
         <Box>
-          <Heading size="2xl">{session.clubName}</Heading>
-          <Flex align="center" gap={2} mt={1}>
-            <Text color="gray.500">{round.name} ·</Text>
-            <Input
-              type="date"
-              size="sm"
-              w="auto"
-              variant="flushed"
-              value={session.date}
-              onChange={e => handleDateChange(e.target.value)}
-            />
-          </Flex>
+          <Heading size="2xl">{round.name}</Heading>
+          <Input
+            type="date"
+            size="sm"
+            w="auto"
+            variant="flushed"
+            value={session.date}
+            onChange={e => handleDateChange(e.target.value)}
+            mt={1}
+          />
         </Box>
-        <Flex gap={2}>
-          <IconButton
-            variant="outline"
-            colorPalette="red"
-            aria-label="Delete session"
-            onClick={handleDelete}
-          >
-            <Trash2 />
-          </IconButton>
-          <Button colorPalette="blue" onClick={() => setShowAddModal(true)}>
-            Add Archer
-          </Button>
-        </Flex>
+        <IconButton
+          variant="outline"
+          colorPalette="red"
+          aria-label="Delete session"
+          onClick={handleDelete}
+        >
+          <Trash2 />
+        </IconButton>
+      </Flex>
+
+      <Flex justify="space-between" align="center" mb={4}>
+        <Heading size="xl">{session.clubName}</Heading>
+        <Button colorPalette="blue" onClick={() => setShowAddModal(true)}>
+          Add Archer
+        </Button>
       </Flex>
 
       {session.archers.length === 0 ? (
