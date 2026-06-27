@@ -16,7 +16,7 @@ import {
   Table,
   Text,
 } from '@chakra-ui/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { ClipboardPenLine, Pencil, Trash2 } from 'lucide-react';
 import type { Archer, BowType, Session } from '../types';
 import { getSession, updateSession, deleteSession } from '../lib/storage';
 import { ROUNDS } from '../data/rounds';
@@ -28,14 +28,12 @@ import {
   calculateHandicappedScore,
 } from '../lib/scoring';
 import { AddArcherModal } from '../components/AddArcherModal';
-import { ScoreModal } from '../components/ScoreModal';
 
 export function SessionPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [scoringArcher, setScoringArcher] = useState<Archer | null>(null);
 
   useEffect(() => {
     if (id) setSession(getSession(id));
@@ -54,6 +52,7 @@ export function SessionPage() {
     if (!session) return;
     updateArchers([...session.archers, archer]);
     setShowAddModal(false);
+    void navigate(`/session/${session.id}/archer/${archer.id}/scores`);
   }
 
   function handleArcherChange(archerId: string, changes: Partial<Pick<Archer, 'name' | 'bowType' | 'handicap'>>) {
@@ -72,12 +71,6 @@ export function SessionPage() {
     const updated = { ...session, date };
     setSession(updated);
     updateSession(updated);
-  }
-
-  function handleScoreChange(archerId: string, scores: (number | null)[]) {
-    if (!session) return;
-    updateArchers(session.archers.map(a => (a.id === archerId ? { ...a, scores } : a)));
-    setScoringArcher(prev => (prev?.id === archerId ? { ...prev, scores } : prev));
   }
 
   if (!session || !round) {
@@ -200,7 +193,7 @@ export function SessionPage() {
                       ))}
                     </SimpleGrid>
                     <Flex justify="flex-end">
-                      <Button size="sm" variant="outline" onClick={() => setScoringArcher(archer)}>
+                      <Button size="sm" variant="outline" onClick={() => void navigate(`/session/${session.id}/archer/${archer.id}/scores`)}>
                         <Pencil /> Scores
                       </Button>
                     </Flex>
@@ -287,8 +280,8 @@ export function SessionPage() {
                         {hcScore}
                       </Table.Cell>
                       <Table.Cell>
-                        <Button size="sm" variant="outline" onClick={() => setScoringArcher(archer)}>
-                          <Pencil /> Scores
+                        <Button size="sm" variant="outline" onClick={() => void navigate(`/session/${session.id}/archer/${archer.id}/scores`)}>
+                          <ClipboardPenLine />
                         </Button>
                       </Table.Cell>
                     </Table.Row>
@@ -307,12 +300,6 @@ export function SessionPage() {
         round={round}
       />
 
-      <ScoreModal
-        archer={scoringArcher}
-        round={round}
-        onClose={() => setScoringArcher(null)}
-        onChange={handleScoreChange}
-      />
     </Container>
   );
 }
