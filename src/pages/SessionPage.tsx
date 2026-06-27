@@ -66,6 +66,11 @@ export function SessionPage() {
     void navigate('/');
   }
 
+  function handleDeleteArcher(archerId: string) {
+    if (!session) return;
+    updateArchers(session.archers.filter(a => a.id !== archerId));
+  }
+
   function handleDateChange(date: string) {
     if (!session) return;
     const updated = { ...session, date };
@@ -192,10 +197,13 @@ export function SessionPage() {
                         </Box>
                       ))}
                     </SimpleGrid>
-                    <Flex justify="flex-end">
-                      <Button size="sm" variant="outline" onClick={() => void navigate(`/session/${session.id}/archer/${archer.id}/scores`)}>
+                    <Flex justify="flex-end" gap={2}>
+                      <Button size="sm" variant="ghost" onClick={() => void navigate(`/session/${session.id}/archer/${archer.id}/scores`)}>
                         <Pencil /> Scores
                       </Button>
+                      <IconButton size="sm" variant="ghost" colorPalette="red" aria-label="Delete archer" onClick={() => handleDeleteArcher(archer.id)}>
+                        <Trash2 />
+                      </IconButton>
                     </Flex>
                   </Card.Body>
                 </Card.Root>
@@ -280,9 +288,14 @@ export function SessionPage() {
                         {hcScore}
                       </Table.Cell>
                       <Table.Cell>
-                        <Button size="sm" variant="outline" onClick={() => void navigate(`/session/${session.id}/archer/${archer.id}/scores`)}>
-                          <ClipboardPenLine />
-                        </Button>
+                        <Flex gap={2} justify="flex-end">
+                          <Button size="sm" variant="ghost" onClick={() => void navigate(`/session/${session.id}/archer/${archer.id}/scores`)}>
+                            <ClipboardPenLine />
+                          </Button>
+                          <IconButton size="sm" variant="ghost" colorPalette="red" aria-label="Delete archer" onClick={() => handleDeleteArcher(archer.id)}>
+                            <Trash2 />
+                          </IconButton>
+                        </Flex>
                       </Table.Cell>
                     </Table.Row>
                   );
