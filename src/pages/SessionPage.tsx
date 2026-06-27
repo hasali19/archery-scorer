@@ -4,11 +4,14 @@ import {
   Badge,
   Box,
   Button,
+  Card,
   Container,
   Flex,
   Heading,
   IconButton,
   Input,
+  SimpleGrid,
+  Stack,
   Table,
   Text,
 } from '@chakra-ui/react';
@@ -118,66 +121,107 @@ export function SessionPage() {
           <Text>No archers yet. Add one to get started.</Text>
         </Box>
       ) : (
-        <Box overflowX="auto">
-          <Table.Root variant="outline">
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeader>Name</Table.ColumnHeader>
-                <Table.ColumnHeader>Type</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="right">Total</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="right">Hits</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="right">Golds</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="right">HC</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="right">Allow.</Table.ColumnHeader>
-                <Table.ColumnHeader textAlign="right">HC Score</Table.ColumnHeader>
-                <Table.ColumnHeader />
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {session.archers.map(archer => {
-                const totalScore = calculateTotalScore(archer.scores);
-                const hits = calculateHits(archer.scores);
-                const golds = calculateGolds(archer.scores, round.goldScore);
-                const allowance = getAllowance(archer.handicap, round.allowances);
-                const hcScore = calculateHandicappedScore(totalScore, allowance);
+        <>
+          {/* Mobile card layout */}
+          <Stack gap={3} display={{ base: 'flex', md: 'none' }}>
+            {session.archers.map(archer => {
+              const totalScore = calculateTotalScore(archer.scores);
+              const hits = calculateHits(archer.scores);
+              const golds = calculateGolds(archer.scores, round.goldScore);
+              const allowance = getAllowance(archer.handicap, round.allowances);
+              const hcScore = calculateHandicappedScore(totalScore, allowance);
 
-                return (
-                  <Table.Row key={archer.id}>
-                    <Table.Cell fontWeight="medium">{archer.name}</Table.Cell>
-                    <Table.Cell>
-                      <Badge
-                        colorPalette={archer.bowType === 'Recurve' ? 'blue' : 'green'}
-                      >
+              return (
+                <Card.Root key={archer.id} variant="outline">
+                  <Card.Body p={4}>
+                    <Flex justify="space-between" align="center" mb={3}>
+                      <Text fontWeight="semibold" fontSize="lg">{archer.name}</Text>
+                      <Badge colorPalette={archer.bowType === 'Recurve' ? 'blue' : 'green'}>
                         {archer.bowType}
                       </Badge>
-                    </Table.Cell>
-                    <Table.Cell textAlign="right">{totalScore}</Table.Cell>
-                    <Table.Cell textAlign="right">{hits}</Table.Cell>
-                    <Table.Cell textAlign="right">{golds}</Table.Cell>
-                    <Table.Cell textAlign="right">
-                      {archer.handicap !== null ? archer.handicap : '—'}
-                    </Table.Cell>
-                    <Table.Cell textAlign="right">
-                      {archer.handicap !== null ? allowance : '—'}
-                    </Table.Cell>
-                    <Table.Cell textAlign="right" fontWeight="semibold">
-                      {hcScore}
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setScoringArcher(archer)}
-                      >
-                        Scores
+                    </Flex>
+                    <SimpleGrid columns={3} gap={3} mb={3}>
+                      {[
+                        { label: 'Total', value: totalScore },
+                        { label: 'Hits', value: hits },
+                        { label: 'Golds', value: golds },
+                        { label: 'HC', value: archer.handicap !== null ? archer.handicap : '—' },
+                        { label: 'Allow.', value: archer.handicap !== null ? allowance : '—' },
+                        { label: 'HC Score', value: hcScore },
+                      ].map(({ label, value }) => (
+                        <Box key={label}>
+                          <Text fontSize="xs" color="gray.500">{label}</Text>
+                          <Text fontWeight="medium">{value}</Text>
+                        </Box>
+                      ))}
+                    </SimpleGrid>
+                    <Flex justify="flex-end">
+                      <Button size="sm" variant="ghost" onClick={() => setScoringArcher(archer)}>
+                        Edit Scores
                       </Button>
-                    </Table.Cell>
-                  </Table.Row>
-                );
-              })}
-            </Table.Body>
-          </Table.Root>
-        </Box>
+                    </Flex>
+                  </Card.Body>
+                </Card.Root>
+              );
+            })}
+          </Stack>
+
+          {/* Desktop table layout */}
+          <Box overflowX="auto" display={{ base: 'none', md: 'block' }}>
+            <Table.Root variant="outline">
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeader>Name</Table.ColumnHeader>
+                  <Table.ColumnHeader>Type</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="right">Total</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="right">Hits</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="right">Golds</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="right">HC</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="right">Allow.</Table.ColumnHeader>
+                  <Table.ColumnHeader textAlign="right">HC Score</Table.ColumnHeader>
+                  <Table.ColumnHeader />
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {session.archers.map(archer => {
+                  const totalScore = calculateTotalScore(archer.scores);
+                  const hits = calculateHits(archer.scores);
+                  const golds = calculateGolds(archer.scores, round.goldScore);
+                  const allowance = getAllowance(archer.handicap, round.allowances);
+                  const hcScore = calculateHandicappedScore(totalScore, allowance);
+
+                  return (
+                    <Table.Row key={archer.id}>
+                      <Table.Cell fontWeight="medium">{archer.name}</Table.Cell>
+                      <Table.Cell>
+                        <Badge colorPalette={archer.bowType === 'Recurve' ? 'blue' : 'green'}>
+                          {archer.bowType}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell textAlign="right">{totalScore}</Table.Cell>
+                      <Table.Cell textAlign="right">{hits}</Table.Cell>
+                      <Table.Cell textAlign="right">{golds}</Table.Cell>
+                      <Table.Cell textAlign="right">
+                        {archer.handicap !== null ? archer.handicap : '—'}
+                      </Table.Cell>
+                      <Table.Cell textAlign="right">
+                        {archer.handicap !== null ? allowance : '—'}
+                      </Table.Cell>
+                      <Table.Cell textAlign="right" fontWeight="semibold">
+                        {hcScore}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Button size="sm" variant="ghost" onClick={() => setScoringArcher(archer)}>
+                          Edit Scores
+                        </Button>
+                      </Table.Cell>
+                    </Table.Row>
+                  );
+                })}
+              </Table.Body>
+            </Table.Root>
+          </Box>
+        </>
       )}
 
       <AddArcherModal
