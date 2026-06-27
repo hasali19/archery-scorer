@@ -1,15 +1,20 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { ChakraProvider, defaultSystem } from '@chakra-ui/react'
 import { BrowserRouter, Route, Routes } from 'react-router'
+import './index.css'
+import { HomePage } from './pages/HomePage'
+import { SessionPage } from './pages/SessionPage'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<App />} />
-      </Routes>
-    </BrowserRouter>
+    <ChakraProvider value={defaultSystem}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/session/:id" element={<SessionPage />} />
+        </Routes>
+      </BrowserRouter>
+    </ChakraProvider>
   </StrictMode>,
 )
