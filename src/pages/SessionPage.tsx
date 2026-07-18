@@ -17,7 +17,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { ClipboardPenLine, Pencil, Trash2 } from 'lucide-react';
-import type { Archer, BowType, Session } from '../types';
+import type { Archer, BowType, OpponentArcher, OpponentClub, Session } from '../types';
 import { getSession, updateSession, deleteSession } from '../lib/storage';
 import { ROUNDS } from '../data/rounds';
 import {
@@ -28,6 +28,7 @@ import {
   calculateHandicappedScore,
 } from '../lib/scoring';
 import { AddArcherModal } from '../components/AddArcherModal';
+import { OpponentClubSection } from '../components/OpponentClubSection';
 
 export function SessionPage() {
   const { id } = useParams<{ id: string }>();
@@ -69,6 +70,58 @@ export function SessionPage() {
   function handleDeleteArcher(archerId: string) {
     if (!session) return;
     updateArchers(session.archers.filter(a => a.id !== archerId));
+  }
+
+  function updateOpponents(opponents: OpponentClub[]) {
+    if (!session) return;
+    const updated = { ...session, opponents };
+    setSession(updated);
+    updateSession(updated);
+  }
+
+  function handleAddOpponent() {
+    if (!session) return;
+    updateOpponents([...session.opponents, { id: crypto.randomUUID(), clubName: '', archers: [] }]);
+  }
+
+  function handleDeleteOpponent(clubId: string) {
+    if (!session) return;
+    updateOpponents(session.opponents.filter(c => c.id !== clubId));
+  }
+
+  function handleOpponentClubNameChange(clubId: string, clubName: string) {
+    if (!session) return;
+    updateOpponents(session.opponents.map(c => c.id === clubId ? { ...c, clubName } : c));
+  }
+
+  function handleAddOpponentArcher(clubId: string) {
+    if (!session) return;
+    const archer: OpponentArcher = {
+      id: crypto.randomUUID(),
+      name: '',
+      bowType: 'Recurve',
+      handicap: null,
+      totalScore: 0,
+    };
+    updateOpponents(session.opponents.map(c =>
+      c.id === clubId ? { ...c, archers: [...c.archers, archer] } : c
+    ));
+  }
+
+  function handleOpponentArcherChange(clubId: string, archerId: string, changes: Partial<Pick<OpponentArcher, 'name' | 'bowType' | 'handicap' | 'totalScore'>>) {
+    if (!session) return;
+    updateOpponents(session.opponents.map(c =>
+      c.id === clubId
+        ? { ...c, archers: c.archers.map(a => a.id === archerId ? { ...a, ...changes } : a) }
+        : c
+    ));
+  }
+
+  function handleDeleteOpponentArcher(clubId: string, archerId: string) {
+    if (!session) return;
+    updateOpponents(session.opponents.map(c =>
+      c.id === clubId ? { ...c, archers: c.archers.filter(a => a.id !== archerId) } : c
+    ));
   }
 
   function handleDateChange(date: string) {
@@ -305,6 +358,24 @@ export function SessionPage() {
           </Box>
         </>
       )}
+
+      <Stack gap={8} mt={8}>
+        {session.opponents.map(club => (
+          <OpponentClubSection
+            key={club.id}
+            club={club}
+            round={round}
+            onClubNameChange={name => handleOpponentClubNameChange(club.id, name)}
+            onAddArcher={() => handleAddOpponentArcher(club.id)}
+            onArcherChange={(archerId, changes) => handleOpponentArcherChange(club.id, archerId, changes)}
+            onDeleteArcher={archerId => handleDeleteOpponentArcher(club.id, archerId)}
+            onDeleteClub={() => handleDeleteOpponent(club.id)}
+          />
+        ))}
+        <Box>
+          <Button variant="outline" onClick={handleAddOpponent}>Add Opponent</Button>
+        </Box>
+      </Stack>
 
       <AddArcherModal
         open={showAddModal}

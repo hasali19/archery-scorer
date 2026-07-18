@@ -23,10 +23,25 @@ export interface Archer {
   scores: (number | null)[];
 }
 
+export interface OpponentArcher {
+  id: string;
+  name: string;
+  bowType: BowType;
+  handicap: number | null;
+  totalScore: number;
+}
+
+export interface OpponentClub {
+  id: string;
+  clubName: string;
+  archers: OpponentArcher[];
+}
+
 export interface Session {
   id: string;
   clubName: string;
   date: string;
   roundId: string;
   archers: Archer[];
+  opponents: OpponentClub[];
 }

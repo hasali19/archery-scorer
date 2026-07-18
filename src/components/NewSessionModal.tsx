@@ -31,6 +31,7 @@ export function NewSessionModal({ open, onClose, onCreated }: Props) {
       date: new Date().toISOString().slice(0, 10),
       roundId,
       archers: [],
+      opponents: [{ id: crypto.randomUUID(), clubName: '', archers: [] }],
     };
     createSession(session);
     onCreated(session);
